@@ -41,6 +41,8 @@ git clone git@github.com:Bodyrelife/dsh-uni-remote.git <任意目录>
 #    dsh.profile.bundles 加 "dsh-uni-remote"
 # 2) 符号链接（与 dsh-session-composer 同款约定）
 ln -sfn <clone 目录> ~/.dsh/profiles/desktop/node_modules/dsh-uni-remote
+# 2b) 关键：仓库内 node_modules 自链接（缺它客户端设置栏会被静默剔除，见下）
+ln -sfn .. <clone 目录>/node_modules/dsh-uni-remote
 # 3) 重启 DSH 桌面端 → 设置页出现「插件同步」栏
 ```
 
@@ -48,6 +50,22 @@ The bundle is self-contained: committed `node_modules/` carries every runtime
 import (`ssh2`, `@deepseek-ai/schemastery`, `iconv-lite`, `yaml`). Note: the
 0.8.94-uni.1 tarball initially shipped WITHOUT schemastery/iconv-lite — fixed
 in uni.2 when `yaml` was added for the uni layer (latent load blocker).
+
+### Why step 2b exists (silent client-side drop)
+
+The host mounts the plugin **by path** (server side works, plugin inventory
+shows it enabled), but `@deepseek-ai/dsh-client-modules` re-resolves the row's
+**bare package name** (`entry.options.name`) from the bundle tree base to find
+`client.js`. With Node 24 resolve internals present, a failed resolution is
+swallowed (`catch { return; }` in `locatePkgJson`) and the entry is silently
+excluded from the client graph — no settings sections, no error anywhere.
+A `link:` install realpaths to the clone dir, and nothing above it contains
+`node_modules/dsh-uni-remote`, so the re-resolution fails. The in-repo
+self-link `<clone>/node_modules/dsh-uni-remote -> ..` makes it resolve.
+Market/pnpm installs (`dsh plugin --profile desktop add link:<dir>`) get this
+for free from the `.pnpm` layout, so only manual `link:` installs need it.
+Remote pushes via the uni-sync button ship a packed tarball through real
+`npm install` and are unaffected.
 
 ## P4 push engine (what the button pushes)
 
