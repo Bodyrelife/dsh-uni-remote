@@ -11,3 +11,6 @@
 
 # upstream-sync scratch
 .upstream/
+.npm-cache
+node_modules/.bin
+node_modules/.package-lock.json

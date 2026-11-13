@@ -30,7 +30,24 @@ messaging + P4 one-click plugin push. Full design: workspace
 | P1 remote base (SSH / rw_* / webAttach) | ✅ inherited upstream 0.8.94 | `lib/` (fork edits: update guards only) |
 | P2 memory sync (dsh-mnemon + bidirectional) | 📋 designed, M2-M4 | DESIGN.md §4-5 |
 | P3 cross-machine agent messaging | 📋 designed, M4-M5 | DESIGN.md (mailbox V1/V2) |
-| P4 one-click plugin push | 🚧 scaffold (`lib/uni/sync.js`), M6 | DESIGN.md §6.1 |
+| P4 one-click plugin push | ✅ implemented (server RPC + settings button; 真机验证中) | `lib/uni/routes.js` + `lib/uni/sync.js` + `lib/client.js` UniSyncPage |
+
+## Install (manual, from git)
+
+```bash
+git clone git@github.com:Bodyrelife/dsh-uni-remote.git <任意目录>
+# 1) ~/.dsh/profiles/desktop/package.json
+#    dependencies 加  "dsh-uni-remote": "link:<clone 目录>"
+#    dsh.profile.bundles 加 "dsh-uni-remote"
+# 2) 符号链接（与 dsh-session-composer 同款约定）
+ln -sfn <clone 目录> ~/.dsh/profiles/desktop/node_modules/dsh-uni-remote
+# 3) 重启 DSH 桌面端 → 设置页出现「插件同步」栏
+```
+
+The bundle is self-contained: committed `node_modules/` carries every runtime
+import (`ssh2`, `@deepseek-ai/schemastery`, `iconv-lite`, `yaml`). Note: the
+0.8.94-uni.1 tarball initially shipped WITHOUT schemastery/iconv-lite — fixed
+in uni.2 when `yaml` was added for the uni layer (latent load blocker).
 
 ## P4 push engine (what the button pushes)
 
