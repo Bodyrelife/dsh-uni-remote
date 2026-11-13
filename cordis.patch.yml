@@ -1,0 +1,15 @@
+# dsh-uni-remote bundle patch: inserts this fork's plugin entries into a profile's layer stack.
+#
+# Fork of dsh-remote@0.8.94 — charter in UNI.md.
+# The first entry id intentionally KEEPS the upstream `dsh-remote` spelling:
+# lib/client.js settings slots, lib/credential.js keychain SERVICE and
+# lib/update.js SELF_ENTRY_NAMES all match on it, so existing configs and
+# saved credentials keep working. Only the `name:` (package id) points at
+# this fork. Never mount dsh-better-sidebar here (upstream policy unchanged).
+#
+# The second entry mounts the uni extension layer (P4 push engine scaffold).
+- insert:
+    - id: dsh-remote
+      name: 'dsh-uni-remote'
+    - id: dsh-uni-sync
+      name: 'dsh-uni-remote/uni-sync'

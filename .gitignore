@@ -1,0 +1,13 @@
+# npm/tarball litter
+*.tgz
+.npm-tmp/
+
+# macOS
+.DS_Store
+
+# editors
+.idea/
+.vscode/
+
+# upstream-sync scratch
+.upstream/
