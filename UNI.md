@@ -28,8 +28,8 @@ messaging + P4 one-click plugin push. Full design: workspace
 | Pillar | Status | Where |
 |---|---|---|
 | P1 remote base (SSH / rw_* / webAttach) | ✅ inherited upstream 0.8.94 | `lib/` (fork edits: update guards only) |
-| P2 memory sync (dsh-mnemon + bidirectional) | 📋 designed, M2-M4 | DESIGN.md §4-5 |
-| P3 cross-machine agent messaging | ✅ V1 (M4): uni_send/uni_inbox/uni_read file mailbox, followup only; M5 (HTTP+inject/steer) pending | DESIGN.md §5 |
+| P2 memory sync | ✅ tools (uni.7): uni_mem_status / uni_mem_pull / uni_mem_push via mnemon CLI both ends (CLI must exist on each end; graceful error otherwise) | `lib/uni/memory.js` |
+| P3 cross-machine agent messaging | ✅ V1+M5 (uni.7): file mailbox (uni_send/uni_inbox/uni_read, mode=mail passive) + live channel (mode=followup/inject/steer auto-delivered by mailbox watcher; local tools uni_agents/uni_inject/uni_steer/uni_followup via host `ctx.get("agents")` seam) | `lib/uni/mailbox.js` + `lib/uni/steer.js` |
 | P4 one-click plugin push | ✅ implemented (server RPC + settings button; 真机验证中) | `lib/uni/routes.js` + `lib/uni/sync.js` + `lib/client.js` UniSyncPage |
 
 ## Install (manual, from git)
@@ -74,3 +74,39 @@ Local profile is the single source of truth. Push = three pieces
 overlay rows), exact-version skip, machine-specific fields sanitized,
 remote dsh web restarted on change. See `lib/uni/sync.js` header for the
 full contract and the issue-#470 warning.
+
+## uni.7 — P3 M5 live channel + P2 memory sync tools (2026-11-16)
+
+**P3 M5 (live injection).** Mail gains an optional `mode`: `mail` (default,
+unchanged — recipient polls `uni_inbox`) or `followup|inject|steer`. Live mail
+is auto-delivered by a mailbox watcher inside the plugin (5s poll of the local
+inbox): the receiving machine's own dsh-uni-remote resolves the named target
+session and calls the host agent seam — exactly the first-party pattern in
+`dsh-cordis-host-runner`:
+
+```js
+const agent = ctx.get('agents')?.get(sessionId)
+agent[mode](createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'uni-remote' } }))
+```
+
+(`followup` = queue next-turn + wake; `steer` = queue next-step + wake, i.e.
+interrupt; `inject` = queue next-step without wake. Message factory is
+`createUserMessage` from `@deepseek-ai/dsh-llm`, resolved from the host app
+tree like `dsh-tools`.) Constraints: live modes need a NAMED `to` (a `*`
+broadcast is left for `uni_read`); the remote machine must run uni-remote ≥
+uni.7 for its watcher to honor the mode; same-machine live sends go straight
+through the seam (no file round-trip wait) while still filing a `sent/` copy.
+Local addressing tools: `uni_agents` (list live sessions), `uni_inject`,
+`uni_steer`, `uni_followup` (`lib/uni/steer.js`).
+
+**P2 (memory sync).** `uni_mem_status` / `uni_mem_pull` / `uni_mem_push`
+(`lib/uni/memory.js`) drive the mnemon CLI over the dsh-remote SSH channel on
+both ends: pull = `recall "" --basic --limit 100000` dump → archive under
+`~/.dsh/uni-remote/memory/` → optional faithful `import --no-diff` into a
+local space tagged `origin:remote-<machine>`; push = local dump → draft tagged
+`origin:local` → SFTP → remote `import --no-diff`. CLI discovery mirrors
+dsh-mnemon's `native-cli.js` (`UNI_MNEMONIC_CLI`/PATH/common paths, JS
+launcher under the host node). **The mnemon CLI must exist on each end**;
+missing CLI = clear actionable error, archives still land locally. This
+machine currently has NO mnemon CLI — set `UNI_MNEMONIC_CLI` or install
+before expecting pull/push to complete.
