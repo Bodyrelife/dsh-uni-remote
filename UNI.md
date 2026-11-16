@@ -29,7 +29,7 @@ messaging + P4 one-click plugin push. Full design: workspace
 |---|---|---|
 | P1 remote base (SSH / rw_* / webAttach) | ✅ inherited upstream 0.8.94 | `lib/` (fork edits: update guards only) |
 | P2 memory sync (dsh-mnemon + bidirectional) | 📋 designed, M2-M4 | DESIGN.md §4-5 |
-| P3 cross-machine agent messaging | 📋 designed, M4-M5 | DESIGN.md (mailbox V1/V2) |
+| P3 cross-machine agent messaging | ✅ V1 (M4): uni_send/uni_inbox/uni_read file mailbox, followup only; M5 (HTTP+inject/steer) pending | DESIGN.md §5 |
 | P4 one-click plugin push | ✅ implemented (server RPC + settings button; 真机验证中) | `lib/uni/routes.js` + `lib/uni/sync.js` + `lib/client.js` UniSyncPage |
 
 ## Install (manual, from git)
