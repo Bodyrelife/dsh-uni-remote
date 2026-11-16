@@ -110,3 +110,19 @@ launcher under the host node). **The mnemon CLI must exist on each end**;
 missing CLI = clear actionable error, archives still land locally. This
 machine currently has NO mnemon CLI — set `UNI_MNEMONIC_CLI` or install
 before expecting pull/push to complete.
+
+## M7 — uni-bootstrap skill (uni.7)
+
+`skills/uni-bootstrap/SKILL.md` is the idempotent runbook that brings a fresh
+SSH machine online: probe → node ≥ 20.12 → `npm i -g @deepseek-ai/dsh
+dsh-uni-remote` → `nohup dsh web` + persist the URL to `~/.dsh-web-url`
+(closes the `webAttachDiscoverCommand` loop) → verify uni layer. The host
+discovers skills from fixed roots only (project `.dsh/skills`, user
+`~/.dsh/skills`, `DSH_BUNDLED_SKILL_DIR`) — plugin packages cannot ship
+loadable skills directly, so activation on a machine = copy the directory:
+
+```
+cp -r <repo>/skills/uni-bootstrap ~/.dsh/skills/
+```
+
+(uni-sync push could deliver it later; not wired yet.)
