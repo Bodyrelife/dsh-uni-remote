@@ -29,9 +29,24 @@ messaging + P4 one-click plugin push. Full design: workspace
 |---|---|---|
 | P1 remote base (SSH / rw_* / webAttach) | ✅ inherited upstream 0.8.94 | `lib/` (fork edits: update guards only) |
 | P2 memory sync | ✅ tools (uni.7): uni_mem_status / uni_mem_pull / uni_mem_push via mnemon CLI both ends (CLI must exist on each end; graceful error otherwise) | `lib/uni/memory.js` |
-| P3 cross-machine agent messaging | ✅ V1+M5 (uni.7): file mailbox (uni_send/uni_inbox/uni_read, mode=mail passive) + live channel (mode=followup/inject/steer auto-delivered by mailbox watcher; local tools uni_agents/uni_inject/uni_steer/uni_followup via host `ctx.get("agents")` seam) | `lib/uni/mailbox.js` + `lib/uni/steer.js` |
+| P3 cross-machine agent messaging | ✅ V1+M5 (uni.7) + task delegation (uni.10): file mailbox (uni_send/uni_inbox/uni_read, mode=mail passive) + live channel (mode=followup/inject/steer auto-delivered by mailbox watcher; local tools uni_agents/uni_inject/uni_steer/uni_followup via host `ctx.get("agents")` seam) + uni_task/uni_task_result reply-addressed delegation loop | `lib/uni/mailbox.js` + `lib/uni/steer.js` + `lib/uni/task.js` |
 | P4 one-click plugin push | ✅ implemented (server RPC + settings button; 真机验证中) | `lib/uni/routes.js` + `lib/uni/sync.js` + `lib/client.js` UniSyncPage |
 | P5 same-page remote sessions (uni.9) | ✅ implemented (真机验证中): same-origin reverse proxy embedding every attached remote web in this page | `lib/uni/attach-proxy.js` + `lib/client.js` UniSessionsPage |
+
+## P3.5 — cross-machine task delegation (uni.10)
+
+`uni_task { machine?, to?, subject?, body, waitSec? }` — the collaboration
+primitive: it sends a reply-addressed task mail (mode=followup, so a uni.7+
+remote watcher drops it live into the named session) and blocks up to
+`waitSec` (default 120, cap 570) polling the local inbox for a mail whose
+`replyTo` equals the task id; timeout returns a pending handle for
+`uni_task_result { taskId }`.
+
+The receiving side needs no new tools beyond uni.7: the watcher's delivery
+body carries an appended reply contract (`[uni-task <id> … reply with uni_send
+{ machine, to:"*", replyTo, … }]`), so the targeted agent answers over the
+existing mailbox and the delegator's `uni_task` picks the result up. Same
+machine works too (`machine: "local"` → `_local` inbox, no SSH).
 
 ## P5 — same-page remote sessions (uni.9)
 
