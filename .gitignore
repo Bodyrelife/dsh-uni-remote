@@ -14,3 +14,4 @@
 .npm-cache
 node_modules/.bin
 node_modules/.package-lock.json
+tmp-smoke/

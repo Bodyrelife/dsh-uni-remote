@@ -31,6 +31,27 @@ messaging + P4 one-click plugin push. Full design: workspace
 | P2 memory sync | ✅ tools (uni.7): uni_mem_status / uni_mem_pull / uni_mem_push via mnemon CLI both ends (CLI must exist on each end; graceful error otherwise) | `lib/uni/memory.js` |
 | P3 cross-machine agent messaging | ✅ V1+M5 (uni.7): file mailbox (uni_send/uni_inbox/uni_read, mode=mail passive) + live channel (mode=followup/inject/steer auto-delivered by mailbox watcher; local tools uni_agents/uni_inject/uni_steer/uni_followup via host `ctx.get("agents")` seam) | `lib/uni/mailbox.js` + `lib/uni/steer.js` |
 | P4 one-click plugin push | ✅ implemented (server RPC + settings button; 真机验证中) | `lib/uni/routes.js` + `lib/uni/sync.js` + `lib/client.js` UniSyncPage |
+| P5 same-page remote sessions (uni.9) | ✅ implemented (真机验证中): same-origin reverse proxy embedding every attached remote web in this page | `lib/uni/attach-proxy.js` + `lib/client.js` UniSessionsPage |
+
+## P5 — same-page remote sessions (uni.9)
+
+A remote DSH web issues `SameSite=Strict` auth cookies, which a browser never
+sends from inside a cross-site iframe — plain embedding is impossible. uni.9
+solves it with a same-origin reverse proxy instead:
+
+- Every attached remote web is served under `/dsh-remote/attach/<machineId>/…`.
+- The proxy keeps a per-machine cookie jar server-side: the remote's
+  `Set-Cookie` never reaches the browser; every upstream request gets the jar
+  injected. First visit splices the attach URL's `?token=` in to bootstrap.
+- HTML responses are rewritten (`/assets/...` → prefix-relative) so the SPA
+  loads under the prefix; the WebSocket mux path resolves relative to
+  `document.baseURI` in the frontend (`new URL(path.slice(1), base)`), so it
+  lands on `/dsh-remote/attach/<id>/api/remote.mux` — one exact upgrade route
+  per machine (registered at boot + re-ensured on each status poll), proxied as
+  a raw TCP pipe with the handshake rewritten (prefix stripped, cookie added).
+- UI: settings → 「远程会话」 — machine tabs; click a non-attached machine to
+  open web-attach, click an attached one to show its full remote UI in an
+  iframe. Multiple machines stay side by side, cookies isolated by the jar.
 
 ## Install (manual, from git)
 
