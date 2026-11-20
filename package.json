@@ -1,6 +1,6 @@
 {
   "name": "dsh-uni-remote",
-  "version": "0.8.94-uni.20",
+  "version": "0.8.94-uni.21",
   "uni": {
     "forkOf": "dsh-remote@0.8.94",
     "forkedAt": "2026-11-13",
